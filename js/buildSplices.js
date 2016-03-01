@@ -11,16 +11,11 @@ var bufferwidth= 25,
     w = 600,
     h = 1500;
 
+var highlightedSplice;
+
 var colorScale = d3.scale.ordinal()
   .domain(ranges.fiber_color_abrev)
   .range(ranges.fiber_color_display);
-
-// var x = d3.scale.linear().range([0, w]),
-//     y = d3.scale.linear().range([h, 0]);
-//
-// var line = d3.svg.line()
-//     .x(function(d) { return x(d.x); })
-//     .y(function(d) { return y(d.y); });
 
 function makeDiagram (connectionData) {
     spliceDiagram = d3.select('#spliceDiagram')
@@ -60,65 +55,106 @@ function makeDiagram (connectionData) {
       });
 
     strand.append('rect')
-      .attr('class', 'fiber-strand-rect')
       .attr('width', function() { return w/2 - bufferwidth; })
       .attr('height', function(d, i) { return h/d.buffer_count/d.fiber_count; })
-      .attr('fill', function(d,i) {
-        var fillColor = d3.hsl(colorScale(d.fiber_color)),
-            altColor = (d.fiber_color == 'WH') ? '#55555' : '#fefefe',
-            inUse = d3.scale.linear().domain([1,10]).range([fillColor, altColor]);
-        return (d.circuit_id) ? inUse(7) : fillColor;
-      });
+      .attr('stroke', 'black')
+      .attr('fill', 'white');
 
     strand.append('circle')
       .attr('r', function(d) { return h/d.buffer_count/d.fiber_count/2; })
       .attr('transform', function(d) {
         var bwidth = (d.cable_id % 2) ? 0 : (w/2 - bufferwidth);
         return 'translate(' + bwidth + ',' + h/d.buffer_count/d.fiber_count/2 + ')';
-      })
-      .on('click', function(data) {
-        var circuitID = data.circuit_id;
-        if (!data.circuit_id) return;
-          var clickedCoords = getCircleCoords(d3.select(this));
-
-          var matching = d3.selectAll('.fiber-strand circle')
-            .filter(function(d, i) { return ((d.cable_id !== data.cable_id) && (d.circuit_id == circuitID)); })
-            .each(function(selection) {
-              var coords = getCircleCoords(d3.select(this));
-              drawLine(clickedCoords, coords, circuitID);
-            });
       });
+
+    strand
+      .on('mouseover', function(d) {
+        highlightedSplice = d.circuit_id;
+        highlightSplices();
+      })
+      .on('mouseout', function(d) {
+        setTimeout(function () {
+          if (highlightedSplice === d.circuit_id) {
+            highlightedSplice = false;
+            highlightSplices();
+          }
+        }, 100);
+      });
+
+  drawSplices();
+}
+
+function drawSplices () {
+  var cable1 = d3.selectAll('.fiber-strand circle').filter(function(d) { return !(d.cable_id % 2); }),
+      cable2 = d3.selectAll('.fiber-strand circle').filter(function(d) { return (d.cable_id % 2); });
+
+  cable1.each(function(data) {
+    if (!data.circuit_id) return;
+    var pointA = getCircleCoords(d3.select(this));
+
+    var matching = cable2.filter(function(d, i) { return d.circuit_id == data.circuit_id; })
+      .each(function(d) {
+        var pointB = getCircleCoords(d3.select(this));
+        drawLine(pointA, pointB, d.circuit_id);
+      });
+  });
+
+  highlightSplices();
+}
+
+function highlightSplices () {
+  d3.selectAll('.splice')
+    .transition().duration(200)
+    .attr('stroke-width', function(d) { return (!highlightedSplice) ? 3 : (d.circuit_id == highlightedSplice) ? 4 : 1; })
+    .attr('opacity', function(d) { return (!highlightedSplice || d.circuit_id == highlightedSplice) ? 1 : 0.3; });
+
+  d3.selectAll('.fiber-strand rect')
+    .transition().duration(200)
+    .attr('fill', function(d,i) {
+      var fillColor = d3.hsl(colorScale(d.fiber_color)),
+          altColor = (d.fiber_color == 'WH') ? '#ddd' : '#fefefe',
+          inUse = d3.scale.linear().domain([1,10]).range([fillColor, altColor]);
+      return ((!highlightedSplice && d.circuit_id) || (highlightedSplice && highlightedSplice !== d.circuit_id)) ? inUse(7) : fillColor;
+    })
+    .attr('stroke-width', function(d) {
+      return (highlightedSplice && (highlightedSplice === d.circuit_id)) ? 1 : 0;
+    });
 }
 
 function getCircleCoords (selection) {
   var element = selection.node(),
       x = +element.getAttribute('cx'),
       y = +element.getAttribute('cy'),
-      coords = getElementCoords(element, {x:x, y:y});
+      coords = getElementPosition(element, {x:x, y:y});
   return coords;
 }
 
-function getElementCoords (element, coords) {
-    var ctm = element.getCTM(),
+function getElementPosition (element, coords) {
+  var ctm = element.getCTM(),
     xn = ctm.e + coords.x*ctm.a,
     yn = ctm.f + coords.y*ctm.d;
-    return { x: xn, y: yn };
+  return { x: xn, y: yn };
 }
 
 function drawLine (pointA, pointB, circuitID) {
-  spliceDiagram.selectAll('.splices')
+  spliceDiagram.selectAll('splices')
     .data([ { circuit_id : circuitID } ])
     .enter().append('line')
     .attr('x1', pointA.x).attr('y1', pointA.y)
     .attr('x2', pointB.x).attr('y2', pointB.y)
-    .attr('stroke-width', 2)
-    .attr('stroke', 'black')
+    .attr('class', 'splice')
+    .attr('stroke', 'black');
+}
+
+function zoomTo(v) {
+  var k = diameter / v[2]; view = v;
+  node.attr("transform", function(d) { return "translate(" + (d.x - v[0]) * k + "," + (d.y - v[1]) * k + ")"; });
+  circle.attr("r", function(d) { return d.r * k; });
 }
 
 
 
-
-function formatData() {
+(function () {
   connections = _.map(connections, function(cable, i) {
     var buffers = _.map(_.values(cable), function(buffer) {
       var strands = _.each(buffer, function(strand) { strand.cable_id = i });
@@ -130,8 +166,4 @@ function formatData() {
   });
 
   makeDiagram(connections);
-}
-
-(function() {
-  formatData();
 })();
