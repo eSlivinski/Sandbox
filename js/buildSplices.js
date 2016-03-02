@@ -9,7 +9,8 @@ var ranges= {
 var bufferwidth= 75, spliceGap = 275, w = 600, h = 1500;
 
 var highlightedSplice,
-    dragging = false;
+    dragging = false,
+    zooming = false;
 
 var colorScale = d3.scale.ordinal()
   .domain(ranges.fiber_color_abrev)
@@ -44,7 +45,8 @@ function makeDiagram (connectionData) {
     .append('rect')
       .attr('width', w/2)
       .attr('height', function (d, i) { return fiberScale(d.children.length + 1); })
-      .attr('fill', function (d, i) { return colorScale(d.tube_buffer); });
+      .attr('fill', function (d, i) { return colorScale(d.tube_buffer); })
+      .on('click', function (d, i) { handleZoom(d3.select(this)); });
 
 
     var strand = fiberCable.selectAll('.fiber-strand')
@@ -171,31 +173,33 @@ var zoom = d3.behavior.zoom()
 
 
 function zoomed() {
-  d3.select('#spliceDiagram g')
-    .attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    d3.select('#spliceDiagram g')
+      .attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+}
+
+function handleZoom (selection) {
+  var transition = (!zooming) ? zoomTo(selection) : [1, [0,0]];
+
+  spliceDiagram.transition()
+      .duration(750)
+      .call(zoom.translate(transition[1]).scale(transition[0]).event);
+
+  zooming = !zooming;
 }
 
 /* Super Sketchy But Getting there */
-function zoomTo () {
-  d3.selectAll('.buffer rect')
-  .filter(function (d) { return d.cable_id == 0 && d.buffer_number == 3 })
-  .each(function (d) {
-    var selection = d3.select(this);
-    console.log(selection.node().getBoundingClientRect())
-    var coords = selection.node().getBoundingClientRect(),
-        dx = (coords.left - coords.right),
+function zoomTo (selection) {
+    var pos = getPosition(selection),
+        coords = selection.node().getBoundingClientRect(),
+        dx = (coords.right - coords.left),
         dy = (coords.bottom - coords.top),
-        x = (coords.width + dx) / 2,
-        y = (coords.height + dy) / 2,
-        scale = .9 / Math.max(dx / w, dy / h),
-        translate = [w / 2 - scale * x, h / 2 - scale * y];
+        x = (coords.right + pos.x - coords.width)/2,
+        y = (coords.bottom + coords.top)/2 + (coords.height * 2),
+        scale = (0.9 / Math.max(dx / w, dy / h)),
+        translateX = w / 2 - scale * x,
+        translateY = h / 2 - scale * y;
 
-    // spliceDiagram.transition()
-    //     .duration(750)
-    //     .call(zoom.translate(translate).scale(scale).event);
-      // bufferHieght = fiberScale(_.last(d.children).fiber_number) * 3;
-    // spliceDiagram.attr('transform', 'translate('+ coords.x +','+ ((350 - coords.y) - (bufferHieght/2)) +') scale(3)');
-  })
+    return [scale, [translateX, translateY]];
 }
 
 function setNodeHoverStyle (d, i) {
