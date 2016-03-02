@@ -1,3 +1,8 @@
 .fiber-strand rect {
   cursor: pointer;
 }
+
+.buffer rect {
+  stroke-width: 2px;
+  stroke: black;
+}
