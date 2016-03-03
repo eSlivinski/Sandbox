@@ -1,8 +1,39 @@
-.fiber-strand rect {
-  cursor: pointer;
+.axis {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
 }
 
 .buffer rect {
+  cursor: pointer;
+  stroke-width: 1px;
+  transition: all 200ms 0ms ease-out;
+}
+
+.buffer rect:hover {
+  stroke-width: 10px;
+  transition: all 200ms 0ms ease-out;
+}
+
+.fiber-strand rect {
+  cursor: pointer;
+  stroke-width: 0px;
+  transition: all 200ms 0ms ease-out;
+}
+
+.fiber-strand rect:hover {
   stroke-width: 2px;
-  stroke: black;
+}
+
+circle.connector {
+  cursor: pointer;
 }
