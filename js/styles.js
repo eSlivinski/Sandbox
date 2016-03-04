@@ -1,3 +1,5 @@
+/* STYLES */
+
 /* Connector Nodes */
 var node_DefaultStyle = function (selection) {
   selection
@@ -66,67 +68,92 @@ var splice_CircuitFadeStyle = function (selection) {
 var fiber_DefaultStyle = function (selection) {
   selection
   .transition().duration(200)
-  .attr('fill', function (d, i) { return colorScale(d.fiber_color); })
+  .attr('fill', function (d) { return colorScale(d.fiber_color); })
+  .attr('stroke', function (d) { return d3.hsl(colorScale(d.fiber_color)).darker(); })
   .attr('stroke-width', 0);
 };
 
 var fiber_CircuitHighlightStyle = function (selection) {
   selection
   .transition().duration(200)
-  .attr('fill', function (d, i) { return colorScale(d.fiber_color); })
+  .attr('fill', function (d) { return colorScale(d.fiber_color); })
   .attr('stroke-width', 0);
 };
 
 var fiber_CircuitFadeStyle = function (selection) {
   selection
   .transition().duration(200)
-  .attr('fill', function (d, i) { return colorScaleLight(d.fiber_color); })
+  .attr('fill', function (d) { return colorScaleLight(d.fiber_color); })
   .attr('stroke-width', 0);
 };
 
 
+/* Tube Buffers */
+var buffer_DefaultStyle = function (selection) {
+  selection
+    .transition().duration(200)
+    .attr('fill', function (d) { return colorScale(d.tube_buffer); })
+    .attr('stroke', function (d) { return d3.hsl(colorScale(d.tube_buffer)).darker(); })
+
+};
+
+
+/* STYLE HANDLERS */
+
 
 function setNodeStyle (selection) {
-  var connectors = (selection) ? selection : d3.selectAll('.connector');
-      draggingNode = d3.select('.connector.dragging');
-      draggingData = draggingNode.data()[0];
+  var connectors = (selection) ? selection : d3.selectAll('.connector'),
+      activeCable = false;
+
+  if (d3.selectAll('.connector.dragging').size()) {
+    activeCable = d3.select('.connector.dragging').data()[0].cable_id;
+  }
 
   connectors
-    .each(function(d, i) {
+    .each(function (d) {
       var selection = d3.select(this);
-      return (selection.classed('joined')) ? node_JoinedStyle(selection) :
-      (selection.classed('dragging')) ? node_DragStyle(selection) :
-      (draggingNode.size() && !d.circuit_id && draggingData.cable_id !== d.cable_id) ? node_DraggingStyle(selection) : node_DefaultStyle(selection);
+      var style = (selection.classed('joined')) ? node_JoinedStyle :
+          (activeCable === false) ? node_DefaultStyle :
+          (selection.classed('dragging')) ? node_DragStyle :
+          (d.cable_id !== activeCable) ? node_DraggingStyle : node_DefaultStyle;
+
+      selection.call(style);
     })
 }
 
-
-
-function highlightSplices (data, i) {
+function highlightSplices (data) {
   highlightedSplice = (data) ? data.circuit_id : false;
 
   if (!highlightedSplice) {
-    splice_DefaultStyle(d3.selectAll('.splice'));
-    fiber_DefaultStyle(d3.selectAll('.fiber-strand rect'));
+    d3.selectAll('.splice')
+      .call(splice_DefaultStyle);
+
+    d3.selectAll('.fiber-strand rect')
+      .call(fiber_DefaultStyle);
+
     return;
   }
 
-  var splice_in = d3.selectAll('.splice').filter(function (d) { return d.circuit_id === highlightedSplice; })
-  var splice_out = d3.selectAll('.splice').filter(function (d) { return d.circuit_id !== highlightedSplice; })
+  d3.selectAll('.splice')
+    .filter(function (d) { return d.circuit_id === highlightedSplice; })
+    .call(splice_CircuitHighlightStyle);
 
-  var fiber_in = d3.selectAll('.fiber-strand rect').filter(function (d) { return d.circuit_id === highlightedSplice; })
-  var fiber_out = d3.selectAll('.fiber-strand rect').filter(function (d) { return d.circuit_id !== highlightedSplice; })
+  d3.selectAll('.splice')
+    .filter(function (d) { return d.circuit_id !== highlightedSplice; })
+    .call(splice_CircuitFadeStyle);
 
-  splice_CircuitHighlightStyle(splice_in);
-  splice_CircuitFadeStyle(splice_out);
+  d3.selectAll('.fiber-strand rect')
+    .filter(function (d) { return d.circuit_id === highlightedSplice; })
+    .call(fiber_CircuitHighlightStyle);
 
-  fiber_CircuitHighlightStyle(fiber_in);
-  fiber_CircuitFadeStyle(fiber_out);
+  d3.selectAll('.fiber-strand rect')
+    .filter(function (d) { return d.circuit_id !== highlightedSplice; })
+    .call(fiber_CircuitFadeStyle);
 }
 
-function removeSpliceHighlight (d, i) {
+function removeSpliceHighlight (data) {
   setTimeout(function () {
-    if (highlightedSplice === d.circuit_id) {
+    if (highlightedSplice === data.circuit_id) {
       highlightedSplice = false;
       highlightSplices();
     }

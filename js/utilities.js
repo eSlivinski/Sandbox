@@ -13,8 +13,27 @@ d3.selection.prototype.moveToBack = function() {
     });
 };
 
+d3.selection.prototype.dataObj = function(prop) {
+    var data = this.data()[0];
+    return (!prop) ? data :
+      (_.isArray(prop)) ? _.pick(data, prop) : _.get(data, prop);
+};
+
 var distance = function (a, b) {
   return Math.sqrt(Math.pow(b.x - a.x2, 2) + Math.pow(a.y2 - b.y, 2))
+};
+
+var nearestNeighbor = function (a, neighbors) {
+  return _.chain(neighbors[0])
+    .map(function (pt) {
+      return {
+        element: pt,
+        distance: distance(a, d3.select(pt).data()[0])
+      };
+    })
+    .sortBy('distance')
+    .first()
+    .value();
 };
 
 function getPosition (selection) {
