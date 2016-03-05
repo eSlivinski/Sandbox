@@ -45,6 +45,7 @@ var node_JoinedStyle = function (selection) {
 var splice_DefaultStyle = function (selection) {
   selection
   .transition().duration(200)
+  .attr('stroke', 'black')
   .attr('stroke-width', 3)
   .attr('opacity', 1);
 };
@@ -141,6 +142,14 @@ function highlightSplices (data) {
   d3.selectAll('.splice')
     .filter(function (d) { return d.circuit_id !== highlightedSplice; })
     .call(splice_CircuitFadeStyle);
+
+  d3.selectAll('.connector')
+    .filter(function (d) { return d.circuit_id === highlightedSplice; })
+    .call(node_HoverStyle);
+
+  d3.selectAll('.connector')
+    .filter(function (d) { return d.circuit_id !== highlightedSplice; })
+    .call(node_DefaultStyle);
 
   d3.selectAll('.fiber-strand rect')
     .filter(function (d) { return d.circuit_id === highlightedSplice; })

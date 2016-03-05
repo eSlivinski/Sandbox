@@ -21,7 +21,7 @@ var ranges= {
     '#B0BEC5'/* SL */,
     '#FAFAFA'/* WH */,
     '#ffcdd2'/* RD */,
-    '#777777'/* BK */,
+    '#999999'/* BK */,
     '#FFF9C4'/* YL */,
     '#D1C4E9'/* VI */,
     '#F8BBD0'/* RS */,
@@ -30,7 +30,8 @@ var ranges= {
   fiber_color_abrev: ['BL', 'OR', 'GR', 'BR', 'SL', 'WH', 'RD', 'BK', 'YL', 'VI', 'RS', 'AQ' ]
 };
 
-var highlight= '#FF5722'; /* Deep Orange */
+var highlight= '#FF5722' /* Deep Orange */,
+    snappingThreshold = 20;
 
 var bufferwidth= 75, spliceGap = 275, w = 600, h = 1500;
 
@@ -117,7 +118,7 @@ function makeDiagram (connectionData) {
           x: position.x, y: position.y,
           x2: position.x, y2: position.y
         });
-        drawLine(d, {x: d.x2, y: d.y2 }, { node_key: d.index });
+        drawLine(d, {x: d.x2, y: d.y2 }, d);
       })
       .call(drag)
       .call(node_DefaultStyle)
@@ -136,60 +137,66 @@ function makeDiagram (connectionData) {
 
 }
 var forceDrag = function (selectionA, selectionB) {
+  var parentPosition = getPosition(d3.select(selectionA.node().parentNode));
   var pointA = getPosition(selectionA),
       pointB = getPosition(selectionB),
       event = {
-        x: pointB.x - bufferwidth,
-        y: pointB.y - fiberScale(selectionA.dataObj('buffer_strand_index')),
-        dx: pointB.x - pointA.x - bufferwidth,
-        dy: (pointB.y - pointA.y - fiberScale(selectionA.dataObj('buffer_strand_index')))
+        x: pointB.x - parentPosition.x,
+        y: pointB.y - parentPosition.y,
+        dx: selectionA.dataObj('x') + (pointB.x - parentPosition.x),
+        dy: selectionA.dataObj('y') + (pointB.y - parentPosition.y)
       };
+    console.log(pointA, pointB, parentPosition, event)
 
   event_Dragging(selectionA, event);
   event_DragStop(selectionA, event);
 }
 
 function drawSplices () {
-  cable1 = d3.selectAll('.fiber-strand circle')
+  var cable1 = d3.selectAll('.fiber-strand circle')
     .filter(function (d) { return (!d.cable_id && d.circuit_id); });
+  //
+  // var cable2 = d3.selectAll('.fiber-strand circle')
+  //   .filter(function (d) { return (d.cable_id && d.circuit_id); });
 
-  cable2 = d3.selectAll('.fiber-strand circle')
-    .filter(function (d) { return (d.cable_id && d.circuit_id); });
-
-  cable1.each(function (data) {
-    var selection = d3.select(this);
-
-    matching = cable2
-      .filter(function(d, i) {
-        return data.circuit_id === d.circuit_id;
-      })
-      .each(function (d) {
-        forceDrag(selection, d3.select(this));
-      })
-      .classed('joined', true)
-      .call(setNodeStyle);
-
-    if (matching.size()) {
-      selection.classed('joined', true)
-      .call(setNodeStyle);
-    }
+  d3.selectAll('.fiber-strand circle')
+    .filter(function (d) {
+      return ( !d.cable_id
+               && d.circuit_id);
+    })
+    .each(function (data) {
+      var selection = d3.select(this)
+      var matching = d3.selectAll('.fiber-strand circle')
+        .filter(function (d) {
+          return ( !!d.cable_id
+                   && d.circuit_id
+                   && data.circuit_id === d.circuit_id );
+        })
+        .each(function (d) {
+          forceDrag(selection, d3.select(this));
+        })
+      //   .classed('joined', true)
+      //   .call(setNodeStyle);
+      //
+      // if (matching.size()) {
+      //   selection.classed('joined', true)
+      //   .call(setNodeStyle);
+      // }
   });
 
   highlightSplices();
 }
 
-foo = [];
-
 
 function drawLine (pointA, pointB, data) {
-  d3.select('.spliceContainer').moveToFront().selectAll('splices')
+  d3.select('.spliceContainer').selectAll('splices')
     .data([ data ])
     .enter().append('line')
     .attr('x1', pointA.x).attr('y1', pointA.y)
     .attr('x2', pointB.x).attr('y2', pointB.y)
     .attr('class', 'splice')
-    .attr('stroke', 'black')
-    .attr('node_index', data.node_key);
+    .attr('node_index', data.index)
+    .call(splice_DefaultStyle);
 }
 
 function init () {

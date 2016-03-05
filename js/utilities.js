@@ -28,7 +28,7 @@ var nearestNeighbor = function (a, neighbors) {
     .map(function (pt) {
       return {
         element: pt,
-        distance: distance(a, d3.select(pt).data()[0])
+        distance: distance(a, d3.select(pt).dataObj())
       };
     })
     .sortBy('distance')

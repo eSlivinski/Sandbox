@@ -34,8 +34,8 @@ var event_DragStart = function (selection, event) {
 
 var event_Dragging = function(selection, event) {
   selection.attr('transform', function (d, i) {
-    d.x2 += event.dx,
-    d.y2 += event.dy;
+    d.x2 = event.x,
+    d.y2 = event.y;
 
     return 'translate(' + event.x +',' + event.y + ')'
   });
@@ -56,17 +56,21 @@ var event_DragStop = function (selection, event) {
     .filter(function(d) {
       return ( !d.circuit_id
                && d.cable_id !== data.cable_id );
-    });
+    })
+    // .each(function(d) {
+      var b = nearestNeighbor(data, connectionPts);
+      console.log(b)
+    // });
 
-  var b = nearestNeighbor(data, connectionPts);
 
-  if (b && b.distance <= 20) {
+  if (b && b.distance <= snappingThreshold) {
+
     d3.select(b.element)
-      .classed('joined', true);
+      .classed('joined', true)
+      .call(setNodeStyle);
 
-    selection.classed('joined', true);
-
-    console.log(b)
+    selection
+      .classed('joined', true)
+      .call(setNodeStyle);
   }
-  setNodeStyle();
 };
