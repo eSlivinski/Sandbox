@@ -111,7 +111,9 @@ function makeDiagram (connectionData) {
       })
       .attr('class', 'fiber-strand')
       .call(fiber_DefaultStyle)
-      .on('mouseover', function() { d3.select(this).moveToFront(); });
+      .on('mouseover', highlightSplices)
+      .on('mouseout', removeSpliceHighlight);
+
 
     nodeContainer = spliceDiagram.selectAll('.spliceNodes')
       .data(connectionData)
@@ -125,7 +127,7 @@ function makeDiagram (connectionData) {
         var bufferPos = (d.cable_id) ? spliceGap : 0;
         d.x2 =  w/2 + bufferPos;
         d.y2 = (d.fiber_number-1) * h/d.fiber_capacity + h/d.fiber_capacity/2;
-        // drawLine(d, {x:10 + d.x2, y: 10+d.y2 }, d);
+        drawLine({x:d.x2, y: d.y2 }, {x:d.x2, y: d.y2 }, d);
         return 'translate(' + [d.x2, d.y2] + ')';
       })
       .attr('class', 'splice-node')
@@ -214,14 +216,15 @@ function drawSplices () {
 
 
 function drawLine (pointA, pointB, data) {
-  d3.select('.spliceNodes').selectAll('splices')
+  d3.select('.spliceNodes').selectAll('splice')
     .data([ data ])
     .enter().append('line')
     .attr('x1', pointA.x).attr('y1', pointA.y)
     .attr('x2', pointB.x).attr('y2', pointB.y)
     .attr('class', 'splice')
-    // .attr('node_index', data.index)
-    .call(splice_DefaultStyle);
+    .attr('node_index', data.index)
+    .call(splice_DefaultStyle)
+    .moveToBack();
 }
 
 function init () {

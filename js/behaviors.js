@@ -37,8 +37,13 @@ var event_Dragging = function(selection, event) {
     d.x2 += event.dx,
     d.y2 += event.dy;
 
+    d3.select('.splice[node_index="' + d.index + '"]')
+      .attr('x2', d.x2)
+      .attr('y2', d.y2)
+
     return 'translate(' + event.x +',' + event.y + ')'
   });
+
 };
 
 var event_DragStop = function (selection, event) {
@@ -59,6 +64,7 @@ var event_DragStop = function (selection, event) {
     selection
       .call(join, matched.dataObj());
   }
+  setNodeStyle();
 };
 
 var join = function (selection, data) {
@@ -113,13 +119,16 @@ var collapse = function(selection) {
   var collapseFibers = function() {
     return selection.selectAll('.fiber-strand')
       .transition().duration(700)
-      .delay(function(d, i) { return i * 700/d.fiber_count; })
+      .delay(function(d, i) { return (d.buffer_strand_index - 1) * 700/d.fiber_count; })
       .attr('transform', function (d, i) {
         d.h2 = bufferHeightLookup[d.buffer_number] / d.fiber_count;
-        d.y2 = i * d.h2;
+        d.y2 = (d.buffer_strand_index - 1) * d.h2;
         return 'translate(' + [ d.x, d.y2 ] + ')';
       })
       .attr('height', function (d) { return d.h2; })
+      .attr('fill', function(d) {
+        return (!isCollapsed) ? 'transparent' : colorScale(d.fiber_color);
+      })
   };
 
   var collapseBuffers = function() {
@@ -169,3 +178,8 @@ var collapse = function(selection) {
   animate(queue, -1);
 
 };
+
+// d3.selectAll('.buffer-group').each(function(d){
+// d.collapsed = false;
+// d3.select(this).call(collapse)
+// })

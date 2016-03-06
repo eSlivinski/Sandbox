@@ -135,7 +135,7 @@ function highlightSplices (data) {
     d3.selectAll('.splice')
       .call(splice_DefaultStyle);
 
-    d3.selectAll('.fiber-strand rect')
+    d3.selectAll('.fiber-strand')
       .call(fiber_DefaultStyle);
 
     return;
@@ -157,11 +157,11 @@ function highlightSplices (data) {
     .filter(function (d) { return d.circuit_id !== highlightedSplice; })
     .call(node_DefaultStyle);
 
-  d3.selectAll('.fiber-strand rect')
+  d3.selectAll('.fiber-strand')
     .filter(function (d) { return d.circuit_id === highlightedSplice; })
     .call(fiber_CircuitHighlightStyle);
 
-  d3.selectAll('.fiber-strand rect')
+  d3.selectAll('.fiber-strand')
     .filter(function (d) { return d.circuit_id !== highlightedSplice; })
     .call(fiber_CircuitFadeStyle);
 }
