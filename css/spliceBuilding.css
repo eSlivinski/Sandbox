@@ -1,24 +1,24 @@
-.buffer rect {
+rect.buffer  {
   cursor: pointer;
   stroke-width: 1px;
   transition: all 200ms 0ms ease-out;
 }
 
-.buffer rect:hover {
+rect.buffer:hover {
   stroke-width: 10px;
   transition: all 200ms 0ms ease-out;
 }
 
-.fiber-strand rect {
+rect.fiber-strand {
   cursor: pointer;
   stroke-width: 0px;
   transition: all 200ms 0ms ease-out;
 }
 
-.fiber-strand rect:hover {
+ rect.fiber-strand:hover {
   stroke-width: 2px;
 }
 
-circle.connector {
+circle.splice-node {
   cursor: move;
 }

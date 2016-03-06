@@ -1,6 +1,6 @@
 /* STYLES */
 
-/* Connector Nodes */
+/* Splice Nodes */
 var node_DefaultStyle = function (selection) {
   selection
   .transition().duration(200)
@@ -33,9 +33,16 @@ var node_DragStyle = function (selection) {
   .attr('stroke-width', 3);
 }
 
+var node_JoinedStyle = function (selection) {
+  selection
+  .transition().duration(200)
+  .attr('fill', highlight)
+  .attr('stroke', highlight)
+  .attr('stroke-width', 3);
+}
 
 /* Splice Paths */
-var node_JoinedStyle = function (selection) {
+var splice_JoinedStyle = function (selection) {
   selection
   .transition().duration(200)
   .attr('fill', highlight)
@@ -103,23 +110,22 @@ var buffer_DefaultStyle = function (selection) {
 
 
 function setNodeStyle (selection) {
-  var connectors = (selection) ? selection : d3.selectAll('.connector'),
+  var nodes = (selection) ? selection : d3.selectAll('.splice-node'),
       activeCable = false;
 
-  if (d3.selectAll('.connector.dragging').size()) {
-    activeCable = d3.select('.connector.dragging').data()[0].cable_id;
+  if (d3.selectAll('.splice-node.dragging').size()) {
+    activeCable = d3.select('.splice-node.dragging').data()[0].cable_id;
   }
 
-  connectors
-    .each(function (d) {
-      var selection = d3.select(this);
-      var style = (selection.classed('joined')) ? node_JoinedStyle :
-          (activeCable === false) ? node_DefaultStyle :
-          (selection.classed('dragging')) ? node_DragStyle :
-          (d.cable_id !== activeCable) ? node_DraggingStyle : node_DefaultStyle;
+  nodes.each(function (d) {
+    var selection = d3.select(this);
+    var style = (selection.classed('joined')) ? node_JoinedStyle :
+        (activeCable === false) ? node_DefaultStyle :
+        (selection.classed('dragging')) ? node_DragStyle :
+        (d.cable_id !== activeCable) ? node_DraggingStyle : node_DefaultStyle;
 
-      selection.call(style);
-    })
+    selection.call(style);
+  });
 }
 
 function highlightSplices (data) {
@@ -143,11 +149,11 @@ function highlightSplices (data) {
     .filter(function (d) { return d.circuit_id !== highlightedSplice; })
     .call(splice_CircuitFadeStyle);
 
-  d3.selectAll('.connector')
+  d3.selectAll('.splice-node')
     .filter(function (d) { return d.circuit_id === highlightedSplice; })
     .call(node_HoverStyle);
 
-  d3.selectAll('.connector')
+  d3.selectAll('.splice-node')
     .filter(function (d) { return d.circuit_id !== highlightedSplice; })
     .call(node_DefaultStyle);
 

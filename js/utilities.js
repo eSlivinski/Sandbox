@@ -19,21 +19,16 @@ d3.selection.prototype.dataObj = function(prop) {
       (_.isArray(prop)) ? _.pick(data, prop) : _.get(data, prop);
 };
 
-var distance = function (a, b) {
-  return Math.sqrt(Math.pow(b.x - a.x2, 2) + Math.pow(a.y2 - b.y, 2))
-};
-
 var nearestNeighbor = function (a, neighbors) {
-  return _.chain(neighbors[0])
-    .map(function (pt) {
-      return {
-        element: pt,
-        distance: distance(a, d3.select(pt).dataObj())
-      };
-    })
-    .sortBy('distance')
-    .first()
-    .value();
+  var distanceList = _.map(neighbors[0], function (pt) {
+    var b= d3.select(pt).dataObj();
+    var dx = a.x2 - b.x2
+    var dy = a.y2 - b.y2
+
+    return { distance: Math.sqrt( dx*dx + dy*dy ), element:pt }
+  });
+  distanceList = _.sortBy(distanceList, 'distance');
+  return distanceList[0]
 };
 
 function getPosition (selection) {
@@ -46,6 +41,20 @@ function getPosition (selection) {
       yn = ctm.f + y*ctm.d;
   return { x: xn, y: yn };
 }
+
+var forceDrag = function (selectionA, selectionB) {
+  var pointA = getPosition(selectionA),
+      pointB = getPosition(selectionB),
+      event = {
+        x: pointB.x,
+        y: pointB.y,
+        dx: pointB.x - pointA.x,
+        dy: pointB.y - pointA.y
+      };
+
+  event_Dragging(selectionA, event);
+  event_DragStop(selectionA, event);
+};
 
 
 /* Super Sketchy But Getting there */
@@ -61,4 +70,13 @@ function zoomTo (selection) {
         translateY = h / 2 - scale * y;
 
     return [scale, [translateX, translateY]];
+};
+
+function animate (queue, i) {
+  if(i < queue.length - 1){
+    i = i + 1;
+    return queue[i]().each("end", function() { animate(queue, i) })
+  } else {
+    return true
+  }
 }
