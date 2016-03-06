@@ -77,6 +77,6 @@ function animate (queue, i) {
     i = i + 1;
     return queue[i]().each("end", function() { animate(queue, i) })
   } else {
-    return true
+    return true;
   }
 }
