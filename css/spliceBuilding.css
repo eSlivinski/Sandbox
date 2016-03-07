@@ -22,3 +22,11 @@ rect.fiber-strand {
 circle.splice-node {
   cursor: move;
 }
+
+.splice {
+  transition: stroke-width 200ms 0ms ease-out;
+}
+
+.hide {
+  stroke-width: 0;
+}

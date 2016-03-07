@@ -34,9 +34,9 @@ var highlight= '#FF5722',    // Deep Orange
     snappingThreshold = 20;  // Minimum distance between spliced cables
 
 var bufferwidth= 75,
-    spliceGap = 275,
-    w = 600,
-    h = 1500;
+    spliceGap = 75,
+    w = 200,
+    h = 900;
 
 var highlightedSplice;
 
@@ -53,26 +53,27 @@ var fiberScale = d3.scale.ordinal();
 var bufferScale = d3.scale.ordinal()
     .rangeBands([0, h]);
 
-function makeDiagram (connectionData) {
-    spliceDiagram = d3.select('#spliceDiagram')
+/* Create Elements */
+var makeDiagram = function (connectionData) {
+    var spliceDiagram = d3.select('#spliceDiagram')
       .append('svg')
       .attr('width', w + spliceGap)
       .attr('height', h)
-    .append('g')
+      .append('g')
       .attr('transform', 'translate(0,0)')
-      .call(zoom.event);
+      .call(zoom.event); // Make Sure the top of the diagram is at the top of the screen
 
     var fiberCable = spliceDiagram.selectAll('.cables')
       .data(connectionData)
-    .enter().append('g')
+      .enter().append('g')
       .attr('class', 'cables')
       .attr('transform', function (d, i) {
-        return 'translate(' + (i*(w/2+spliceGap)) + ',0)';
+        return 'translate(' + (d.cable_id * (w/2+spliceGap)) + ',0)';
       });
 
-    var buffer = fiberCable.selectAll('.buffer-group')
+    var bufferGroup = fiberCable.selectAll('.buffer-group')
       .data(function (d) { return d.children; })
-    .enter().append('g')
+      .enter().append('g')
       .attr('class', 'buffer-group')
       .attr('transform', function (d, i) {
         d.x = 0;
@@ -80,23 +81,21 @@ function makeDiagram (connectionData) {
         return 'translate(' + [ d.x, d.y ] + ')';
        });
 
-    buffer.append('rect')
+    var buffer = bufferGroup.append('rect')
       .attr('class', 'buffer')
-      .attr('width', w/2)
-      .attr('height', function (d, i) {
-        d.h = h/d.buffer_count;
-        return d.h;
+      .attr('width', function(d) {
+        d.w = w/2;
+        return d.w;
       })
-      .call(buffer_DefaultStyle)
-      .on('click', function() { d3.select(this.parentNode).call(collapse) })
-      // .on('click', function (d, i) { d3.select(this).call(handleZoom); })
-      .on('mouseover', function() { d3.select(this.parentNode).moveToFront(); });
+      .attr('height', function (d, i) {
+        d.h = bufferScale.rangeBand();
+        return 0;
+      });
 
-
-    strand = buffer.selectAll('.fiber-strand')
+    var strand = bufferGroup.selectAll('.fiber-strand')
       .data(function (d) { return d.children; })
       .enter().append('rect')
-      .attr('transform', function (d, i) {
+      .attr('transform', function (d) {
         d.x = (d.cable_id == 1) ? 0 : bufferwidth;
         d.y = fiberScale(d.buffer_strand_index);
         return 'translate(' + [ d.x, d.y ] + ')';
@@ -107,92 +106,38 @@ function makeDiagram (connectionData) {
       })
       .attr('height', function (d) {
         d.h = fiberScale.rangeBand();
-        return d.h;
+        return 0;
       })
-      .attr('class', 'fiber-strand')
-      .call(fiber_DefaultStyle)
-      .on('mouseover', highlightSplices)
-      .on('mouseout', removeSpliceHighlight);
+      .attr('class', 'fiber-strand');
 
-
-    nodeContainer = spliceDiagram.selectAll('.spliceNodes')
+    var nodeContainer = spliceDiagram.selectAll('.spliceNodes')
       .data(connectionData)
       .enter().append('g')
       .attr('class','spliceNodes');
 
-    nodeContainer.selectAll('.splice-node')
+    var nodes = nodeContainer.selectAll('.splice-node')
       .data(function (d) { return d.grandchildren; })
       .enter().append('circle')
-      .attr('transform', function(d, i) {
+      .attr('datum', function(d) {
         var bufferPos = (d.cable_id) ? spliceGap : 0;
         d.x2 =  w/2 + bufferPos;
         d.y2 = (d.fiber_number-1) * h/d.fiber_capacity + h/d.fiber_capacity/2;
         drawLine({x:d.x2, y: d.y2 }, {x:d.x2, y: d.y2 }, d);
-        return 'translate(' + [d.x2, d.y2] + ')';
       })
+      .attr('transform', function(d, i) { return 'translate(' + [d.x2, d.y2] + ')'; })
       .attr('class', 'splice-node')
-      .attr('r', 0)
+      .attr('r', function(d) {
+        d.r = h/d.fiber_capacity/2;
+        return 0;
+      })
       .call(drag)
-      .call(drawSplices);
+      .call(matchSplices);
 
-      // nodeContainer.selectAll('path')
-      //   .data(function (d) { return d.grandchildren; })
-      //   .enter().append('line')
-      //   .attr('x1', function(d, i) {
-      //     var bufferPos = (d.cable_id) ? spliceGap : 0;
-      //     d.x2 =  w/2 + bufferPos;
-      //     return d.x2;
-      //   })
-      //   .attr('y1', function(d) {
-      //     d.y2 = (d.fiber_number-1) * h/d.fiber_capacity + h/d.fiber_capacity/2;
-      //     rerturn d.y2;
-      //   })
-      //   .attr('x2', function(d) { return 10+x2; })
-      //   .attr('y2', function(d) { return 10+y2; })
+  initialAnimation();
+};
 
-    // strand.append('circle')
-    //   .attr('class', 'connector')
-    //   .attr('transform', function (d) {
-    //     var bwidth = (d.cable_id == 1) ? 0 : (w/2 - bufferwidth);
-    //     return 'translate(' + bwidth + ',' + fiberScale.rangeBand()/2 + ')';
-    //   })
-    //   .attr('r', function (d) { return fiberScale.rangeBand()/2; })
-    //   .each(function (d) {
-    //     var position = getPosition(d3.select(this));
-    //     _.extend(d, {
-    //       x: position.x, y: position.y,
-    //       x2: position.x, y2: position.y
-    //     });
-    //     drawLine(d, {x: d.x2, y: d.y2 }, d);
-    //   })
-    //   .call(drag)
-    //   .call(node_DefaultStyle)
-    //   .on('mouseover', function(data) {
-    //     if (!d3.select(this).classed('joined')) {
-    //       d3.select(this).call(node_HoverStyle);
-    //     }
-    //   })
-    //   .on('mouseout', function() { setNodeStyle(d3.select(this)); });
-    //
-    // strand
-    //   .on('mouseover', highlightSplices)
-    //   .on('mouseout', removeSpliceHighlight);
-
-    // drawSplices()
-
-    setTimeout(function () {
-      d3.selectAll('.splice-node')
-        .call(setNodeStyle)
-        .transition().duration(1000).delay(200)
-        .attr('r', function(d) {
-          d.r = h/d.fiber_capacity/2;
-          return d.r;
-        });
-    }, 500);
-
-}
-
-function drawSplices () {
+/* Decide what strands are already joined */
+var matchSplices = function () {
   d3.selectAll('.splice-node')
     .filter(function (d) {
       return ( !d.cable_id
@@ -206,16 +151,16 @@ function drawSplices () {
                    && d.circuit_id
                    && data.circuit_id === d.circuit_id );
         })
-        .each(function (d) {
-          forceDrag(selection, d3.select(this));
+        .each(function (d, i) {
+          var pointA = getPosition(selection),
+              pointB = getPosition(d3.select(this));
+          forceDrag(selection, pointA, pointB);
         });
   });
-
-  highlightSplices();
 }
 
-
-function drawLine (pointA, pointB, data) {
+/* Connect Points A and B - Bind Data */
+var drawLine = function (pointA, pointB, data) {
   d3.select('.spliceNodes').selectAll('splice')
     .data([ data ])
     .enter().append('line')
@@ -223,10 +168,56 @@ function drawLine (pointA, pointB, data) {
     .attr('x2', pointB.x).attr('y2', pointB.y)
     .attr('class', 'splice')
     .attr('node_index', data.index)
-    .call(splice_DefaultStyle)
+    .attr('stroke-width', 0)
     .moveToBack();
-}
+};
 
+/* Pretty */
+var initialAnimation = function () {
+  d3.transition()
+    .delay(600)
+    .each(function() {
+      d3.selectAll('.buffer')
+        .call(buffer_DefaultStyle);
+      d3.selectAll('.fiber-strand')
+        .call(fiber_DefaultStyle);
+    })
+    .transition()
+    .each(function() {
+      d3.selectAll('.buffer')
+      .transition().duration(700)
+      .attr('height', function(d) { return d.h; });
+      d3.selectAll('.fiber-strand')
+      .transition().duration(700)
+      .attr('height', function(d) { return d.h; });
+    })
+    .transition()
+    .each(function() {
+      d3.selectAll('.splice-node')
+        .call(setNodeStyle);
+      d3.selectAll('.splice-node')
+        .transition().duration(700)
+        .attr('r', function(d) { return d.r; });
+    })
+    .transition()
+    .each(function() {
+      d3.selectAll('.splice')
+        .transition()
+        .duration(700)
+        .call(splice_DefaultStyle);
+    })
+    .each('end', function() {
+        d3.selectAll('.buffer')
+          // .on('click', function() { d3.select(this.parentNode).call(collapse) })
+          .on('mouseover', function() { d3.select(this.parentNode).moveToFront(); });
+
+        d3.selectAll('.fiber-strand')
+          .on('mouseover', highlightSplices)
+          .on('mouseout', removeSpliceHighlight);
+    });
+};
+
+/* Build Data Structure */
 function init () {
   d3.select('#spliceDiagram svg').remove();
 
@@ -250,15 +241,26 @@ function init () {
     cable.fibers
   });
 
+  var bufferIndexes = _.chain(connections)
+    .map('children').flatten()
+    .map('buffer_number').flatten()
+    .uniq().sortBy().value();
 
+  var strandIndexes = _.chain(connections)
+    .map('grandchildren').flatten()
+    .map('buffer_strand_index').flatten()
+    .uniq().sortBy().value();
+
+
+  /* Complete Scale Definitions */
   bufferScale
-    .domain(_.chain(connections).map('children').flatten().map('buffer_number').flatten().uniq().sortBy().value());
+    .domain(bufferIndexes);
 
   fiberScale
     .rangeBands([0, h/_.chain(connections).map('buffer_count').max().value()])
-    .domain(_.chain(connections).map('grandchildren').flatten().map('buffer_strand_index').flatten().uniq().sortBy().value());
+    .domain(strandIndexes);
 
-  // cableScale.domain(_.map(connections, 'cable_id'));
+
   makeDiagram(connections);
 
 } init();

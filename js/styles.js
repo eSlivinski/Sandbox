@@ -108,8 +108,7 @@ var buffer_DefaultStyle = function (selection) {
 
 /* STYLE HANDLERS */
 
-
-function setNodeStyle (selection) {
+var setNodeStyle = function (selection) {
   var nodes = (selection) ? selection : d3.selectAll('.splice-node'),
       activeCable = false;
 
@@ -126,12 +125,13 @@ function setNodeStyle (selection) {
 
     selection.call(style);
   });
-}
+};
 
-function highlightSplices (data) {
+var highlightSplices = function (data) {
   highlightedSplice = (data) ? data.circuit_id : false;
 
   if (!highlightedSplice) {
+
     d3.selectAll('.splice')
       .call(splice_DefaultStyle);
 
@@ -164,13 +164,13 @@ function highlightSplices (data) {
   d3.selectAll('.fiber-strand')
     .filter(function (d) { return d.circuit_id !== highlightedSplice; })
     .call(fiber_CircuitFadeStyle);
-}
+};
 
-function removeSpliceHighlight (data) {
+var removeSpliceHighlight = function (data) {
   setTimeout(function () {
     if (highlightedSplice === data.circuit_id) {
       highlightedSplice = false;
       highlightSplices();
     }
   }, 100);
-}
+};
