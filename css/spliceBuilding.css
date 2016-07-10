@@ -1,0 +1,32 @@
+rect.buffer  {
+  cursor: pointer;
+  stroke-width: 1px;
+  transition: all 200ms 0ms ease-out;
+}
+
+rect.buffer:hover {
+  stroke-width: 10px;
+  transition: all 200ms 0ms ease-out;
+}
+
+rect.fiber-strand {
+  cursor: pointer;
+  stroke-width: 0px;
+  transition: all 200ms 0ms ease-out;
+}
+
+ rect.fiber-strand:hover {
+  stroke-width: 2px;
+}
+
+circle.splice-node {
+  cursor: move;
+}
+
+.splice {
+  transition: stroke-width 200ms 0ms ease-out;
+}
+
+.hide {
+  stroke-width: 0;
+}
