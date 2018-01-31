@@ -1,19 +1,370 @@
 <!DOCTYPE html>
-<head>
-  <meta charset="utf-8">
-  <!-- <link rel="stylesheet" href="./css/.css"> -->
-  <!-- Latest compiled and minified CSS -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
-  <!-- <script src="./data/ .js"></script> -->
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-</head>
-<body>
+<html lang=en ng-app="vetro">
+  <head>
+    <meta charset="UTF-8">
+    <title>VETRO FiberMap - Connections Modal Prototype</title>
+    <meta name="format-detection" content="telephone=no" />
+    <meta id="viewport" name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, target-densitydpi=device-dpi" />
+    <link rel="stylesheet" href="./app.css"/>
+  </head>
+  <body>
+    <style>
+      .modal.fade.in {
+        display: block;
+      }
+      #connections-modal .modal-body {
+        padding: 0px 15px;
+        max-height: 450px;
+      }
+      #connections-modal .modal-footer {
+        margin-top: 0px;
+      }
+      #equipment-col {
+        height: 450px;
+        border-right: 1px solid #b0bac7;
+      }
+      #equipment-col .list-group-item{
+        border-radius: 0px;
+        border-left: none;
+        border-right: none;
+      }
+      #equipment-col .list-group-item:first-of-type{
+        border-top: none;
+      }
+      #connections-col {
+        padding: 20px 15px;
+        margin-bottom: 10px;
+        max-height: 450px;
+        overflow-y: auto;
+      }
+      .connections-table th.heading {
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: normal;
+      }
+      .connections-table td.sub-heading {
+        border-bottom-width: 2px;
+        font-weight: bold;
+        border-top: none;
+      }
+      .connections-table td,
+      .connections-table th {
+        vertical-align: middle;
+      }
+      .connections-table td.connected {
+        font-weight: bold;
+      }
+      .connections-table td.circuit {
+        background-color: #428bca;
+        color: #fff;
+      }
+      .connections-table td.reserved {
+        background-color: #aaa;
+        color: #fff;
+      }
+    </style>
+    <div class="modal fade in"> <div class="modal-dialog modal-lg" id="connections-modal"><div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Equipment Connections</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-xs-4" id="equipment-col">
+            <div class="row">
+              <div class="list-group">
+                <a href="#" class="list-group-item" data-equipment="a"> Splitter A </a>
+                <a href="#" class="list-group-item" data-equipment="b"> Splitter B </a>
+                <a href="#" class="list-group-item" data-equipment="c"> Splitter C </a>
+                <a href="#" class="list-group-item" data-equipment="d"> Multiport D </a>
+                <a href="#" class="list-group-item" data-equipment="e"> Multiport E </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-xs-8" id="connections-col">
+            <table class="table table-bordered text-center connections-table hidden" data-equipment="a">
+              <tr>
+                <th class="heading text-center" colspan="2">Upstream</th>
+                <th class="heading text-center" colspan="2">Ports</th>
+                <th class="heading text-center" colspan="2">Downstream</th>
+              </tr>
+              <tr>
+                <td class="small sub-heading"> Equipment </td>
+                <td class="small sub-heading"> Port # </td>
+                <td class="small sub-heading" colspan="2"></td>
+                <td class="small sub-heading"> Equipment </td>
+                <td class="small sub-heading"> Port # </td>
+              </tr>
+              <tr>
+                <td rowspan="4"> <select class="form-control input-sm"> <option>Connect Equipment</option> </select> </td>
+                <td rowspan="4"> <select class="form-control input-sm" disabled> <option></option> </select> </td>
+                <td rowspan="4"> 1 </td>
+                <td> 1 </td>
+                <td> <select class="form-control input-sm"> <option>Connect Equipment</option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option></option> </select> </td>
+              </tr>
+              <tr>
+                <td> 2 </td>
+                <td> <select class="form-control input-sm"> <option>Connect Equipment</option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option></option> </select> </td>
+              </tr>
+              <tr>
+                <td> 3 </td>
+                <td> <select class="form-control input-sm"> <option>Connect Equipment</option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option></option> </select> </td>
+              </tr>
+              <tr>
+                <td> 4 </td>
+                <td> <select class="form-control input-sm"> <option>Splitter B</option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> 1 </option> </select> </td>
+              </tr>
+            </table>
+
+            <!-- B -->
+            <table class="table table-bordered text-center connections-table hidden" data-equipment="b">
+              <tr>
+                <th class="heading text-center" colspan="2">Upstream</th>
+                <th class="heading text-center" colspan="2">Ports</th>
+                <th class="heading text-center" colspan="2">Downstream</th>
+              </tr>
+              <tr>
+                <td class="small sub-heading"> Equipment </td>
+                <td class="small sub-heading"> Port # </td>
+                <td class="small sub-heading" colspan="2"></td>
+                <td class="small sub-heading"> Equipment </td>
+                <td class="small sub-heading"> Port # </td>
+              </tr>
+              <tr>
+                <td rowspan="8"> <select class="form-control input-sm"> <option>Splitter A</option> </select> </td>
+                <td rowspan="8"> <select class="form-control input-sm"> <option>4</option> </select> </td>
+                <td rowspan="8" class="connected"> 1 </td>
+                <td class="connected"> 1 </td>
+                <td> <select class="form-control input-sm"> <option> Splitter C </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> 1 </option> </select> </td>
+              </tr>
+              <tr>
+                <td class="connected circuit"> 2 </td>
+                <td> <select class="form-control input-sm"> <option>Multiport D </option> </select> </td>
+                <td> <select class="form-control input-sm"> <option>1</option> </select> </td>
+              </tr>
+              <tr>
+                <td class="connected reserved"> 3 </td>
+                <td> <select class="form-control input-sm"> <option> Multiport D  </option> </select> </td>
+                <td> <select class="form-control input-sm"> <option> 2 </option> </select> </td>
+              </tr>
+              <tr>
+                <td class="connected reserved"> 4 </td>
+                <td> <select class="form-control input-sm"> <option>Multiport D </option> </select> </td>
+                <td> <select class="form-control input-sm"> <option>3</option> </select> </td>
+              </tr>
+              <tr>
+                <td class="connected reserved"> 5 </td>
+                <td> <select class="form-control input-sm"> <option>Multiport D </option> </select> </td>
+                <td> <select class="form-control input-sm"> <option>4</option> </select> </td>
+              </tr>
+              <tr>
+                <td class="connected"> 6 </td>
+                <td> <select class="form-control input-sm"> <option>Multiport E </option> </select> </td>
+                <td> <select class="form-control input-sm"> <option>1</option> </select> </td>
+              </tr>
+              <tr>
+                <td class="connected"> 7 </td>
+                <td> <select class="form-control input-sm"> <option>Multiport E </option> </select> </td>
+                <td> <select class="form-control input-sm"> <option>2</option> </select> </td>
+              </tr>
+              <tr>
+                <td> 8 </td>
+                <td> <select class="form-control input-sm"> <option>Connect Equipment </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option></option> </select> </td>
+              </tr>
+            </table>
+
+            <!--  -->
+            <table class="table table-bordered text-center connections-table hidden" data-equipment="c">
+              <tr>
+                <th class="heading text-center" colspan="2">Upstream</th>
+                <th class="heading text-center" colspan="2">Ports</th>
+                <th class="heading text-center" colspan="2">Downstream</th>
+              </tr>
+              <tr>
+                <td class="small sub-heading"> Equipment </td>
+                <td class="small sub-heading"> Port # </td>
+                <td class="small sub-heading" colspan="2"></td>
+                <td class="small sub-heading"> Equipment </td>
+                <td class="small sub-heading"> Port # </td>
+              </tr>
+              <tr>
+                <td rowspan="2"> <select class="form-control input-sm"> <option> Splitter B </option> </select> </td>
+                <td rowspan="2"> <select class="form-control input-sm"> <option> 2 </option> </select> </td>
+                <td rowspan="2"> 1 </td>
+                <td> 1 </td>
+                <td> <select class="form-control input-sm"> <option>Connect Equipment</option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option></option> </select> </td>
+              </tr>
+              <tr>
+                <td> 2 </td>
+                <td> <select class="form-control input-sm"> <option>Connect Equipment</option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option></option> </select> </td>
+              </tr>
+            </table>
+
+            <table class="table table-bordered text-center connections-table hidden" data-equipment="d">
+              <tr>
+                <th class="heading text-center" colspan="2">Upstream</th>
+                <th class="heading text-center" colspan="2">Ports</th>
+                <th class="heading text-center" colspan="2">Downstream</th>
+              </tr>
+              <tr>
+                <td class="small sub-heading"> Equipment </td>
+                <td class="small sub-heading"> Port # </td>
+                <td class="small sub-heading" colspan="2"></td>
+                <td class="small sub-heading"> Equipment </td>
+                <td class="small sub-heading"> Port # </td>
+              </tr>
+              <tr>
+                <td> <select class="form-control input-sm"> <option> Splitter B </option> </select> </td>
+                <td> <select class="form-control input-sm"> <option> 2 </option> </select> </td>
+                <td class="connected circuit"> 1 </td>
+                <td class="connected circuit"> 1 </td>
+                <td class="connected circuit"> </td>
+                <td class="connected circuit"> </td>
+              </tr>
+              <tr>
+                <td> <select class="form-control input-sm"> <option> Splitter B </option> </select> </td>
+                <td> <select class="form-control input-sm"> <option> 3 </option> </select> </td>
+                <td class="connected reserved"> 2 </td>
+                <td class="connected reserved"> 2 </td>
+                <td class="connected reserved"> </td>
+                <td class="connected reserved"> </td>
+              </tr>
+              <tr>
+                <td> <select class="form-control input-sm"> <option> Splitter B </option> </select> </td>
+                <td> <select class="form-control input-sm"> <option> 4 </option> </select> </td>
+                <td class="connected reserved"> 3 </td>
+                <td class="connected reserved"> 3 </td>
+                <td class="connected reserved"> </td>
+                <td class="connected reserved"> </td>
+              </tr>
+              <tr>
+                <td> <select class="form-control input-sm"> <option> Splitter B </option> </select> </td>
+                <td> <select class="form-control input-sm"> <option> 5 </option> </select> </td>
+                <td class="connected reserved"> 4 </td>
+                <td class="connected reserved"> 4 </td>
+                <td class="connected reserved"> </td>
+                <td class="connected reserved"> </td>
+              </tr>
+              <tr>
+                <td> <select class="form-control input-sm"> <option> Connect Equipment </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+                <td> 5 </td>
+                <td> 5 </td>
+                <td> </td>
+                <td> </td>
+              </tr>
+              <tr>
+                <td> <select class="form-control input-sm"> <option> Connect Equipment </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+                <td> 6 </td>
+                <td> 6 </td>
+                <td> </td>
+                <td> </td>
+              </tr>
+            </table>
+
+            <table class="table table-bordered text-center connections-table hidden" data-equipment="e">
+              <tr>
+                <th class="heading text-center" colspan="2">Upstream</th>
+                <th class="heading text-center" colspan="2">Ports</th>
+                <th class="heading text-center" colspan="2">Downstream</th>
+              </tr>
+              <tr>
+                <td class="small sub-heading"> Equipment </td>
+                <td class="small sub-heading"> Port # </td>
+                <td class="small sub-heading" colspan="2"></td>
+                <td class="small sub-heading"> Equipment </td>
+                <td class="small sub-heading"> Port # </td>
+              </tr>
+              <tr>
+                <td class="connected"> <select class="form-control input-sm"> <option> Splitter B </option> </select> </td>
+                <td class="connected"> <select class="form-control input-sm"> <option> 7 </option> </select> </td>
+                <td class="connected"> 1 </td>
+                <td> 1 </td>
+                <td> <select class="form-control input-sm"> <option> Connect Equipment </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+              </tr>
+              <tr>
+                <td class="connected"> <select class="form-control input-sm"> <option> Splitter B </option> </select> </td>
+                <td class="connected"> <select class="form-control input-sm"> <option> 8 </option> </select> </td>
+                <td class="connected"> 2 </td>
+                <td> 2 </td>
+                <td> <select class="form-control input-sm"> <option> Connect Equipment </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+              </tr>
+              <tr>
+                <td> <select class="form-control input-sm"> <option> Connect Equipment </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+                <td> 3 </td>
+                <td> 3 </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+              </tr>
+              <tr>
+                <td> <select class="form-control input-sm"> <option> Connect Equipment </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+                <td> 4 </td>
+                <td> 4 </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+              </tr>
+              <tr>
+                <td> <select class="form-control input-sm"> <option> Connect Equipment </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+                <td> 5 </td>
+                <td> 5 </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+              </tr>
+              <tr>
+                <td> <select class="form-control input-sm"> <option> Connect Equipment </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+                <td> 6 </td>
+                <td> 6 </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+                <td> <select class="form-control input-sm" disabled> <option> </option> </select> </td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary">OK</button>
+      </div>
+    </div></div></div>
+  </body>
+  <script>
+    var tables = document.querySelectorAll('.connections-table');
+    var links = document.querySelectorAll('.list-group-item');
+
+    for (var i=0; i<links.length; i++) {
+      links[i].onclick = function() { showTable(this); }
+      if (!i) {
+        showTable(links[i])
+      }
+    }
+
+    function showTable(clicked) {
+      let equip = clicked.dataset.equipment,
+          current = document.querySelector('.list-group-item.active');
+
+      if (current) {
+        current.classList.remove('active');
+        document.querySelector('.connections-table:not(.hidden)').classList.add('hidden');
+      }
+
+      clicked.classList.add('active');
+       document.querySelector('.connections-table[data-equipment="' + equip + '"]').classList.remove('hidden');
+    }
 
 
-  <div class="container-fluid"> </div>
-
-
-  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-  <script src=" https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.5.0/lodash.js"></script>
-  <!-- <script src="./js/.js"></script> -->
-</body>
+  </script>
+</html>
